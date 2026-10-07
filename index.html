@@ -164,6 +164,31 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    </div>
+
+        <!-- Paragraph Output Box -->
+        <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-h-[320px]">
+            
+            <!-- Paragraph Output Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                <h2 class="font-semibold text-slate-800 dark:text-slate-100 flex items-center">
+                    <i class="fa-solid fa-file-lines text-brand-600 mr-2"></i>
+                    Paragraph Output
+                </h2>
+            </div>
+
+            <!-- Editable Paragraph Output -->
+            <div class="p-6 relative flex flex-col flex-1">
+                <textarea
+                    id="paragraphOutput"
+                    class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
+                    placeholder="Your paragraph output will appear here..."
+                ></textarea>
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
             
             <!-- Format Style Selector -->
             <div class="md:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
@@ -266,6 +291,7 @@
         const statusIndicator = document.getElementById('statusIndicator');
         const visualizer = document.getElementById('visualizer');
         const transcriptEditor = document.getElementById('transcriptEditor');
+        const paragraphOutput = document.getElementById('paragraphOutput');
         const wordCountEl = document.getElementById('wordCount');
         const charCountEl = document.getElementById('charCount');
         const copyBtn = document.getElementById('copyBtn');
@@ -370,11 +396,12 @@
                 }
 
                 if (newFinal) {
-                    finalTranscriptAccumulator += formatSpokenText(newFinal.trim(), currentFormattingMode) + ' ';
-                    transcriptEditor.value = finalTranscriptAccumulator.trim();
-                    updateCounts();
-                    interimBadge.classList.add('hidden');
-                }
+    finalTranscriptAccumulator += formatSpokenText(newFinal.trim(), currentFormattingMode) + ' ';
+    transcriptEditor.value = finalTranscriptAccumulator.trim();
+    updateCounts();
+    syncParagraphOutput();
+    interimBadge.classList.add('hidden');
+}
 
                 if (interim) {
                     interimText.textContent = interim;
@@ -434,6 +461,7 @@
                     transcriptEditor.value = translated;
                     finalTranscriptAccumulator = translated;
                     updateCounts();
+                    syncParagraphOutput();
                     showToast(`Successfully converted to ${langName}!`);
                     return;
                 }
@@ -457,6 +485,7 @@
                 transcriptEditor.value = text;
                 finalTranscriptAccumulator = text;
                 updateCounts();
+                syncParagraphOutput();
                 showToast(`Text adapted for ${langName}!`);
             }, 300);
         }
@@ -636,17 +665,23 @@
         });
 
         function updateCounts() {
-            const text = transcriptEditor.value.trim();
-            const words = text ? text.split(/\s+/).length : 0;
-            const chars = text.length;
-            wordCountEl.textContent = `${words} word${words === 1 ? '' : 's'}`;
-            charCountEl.textContent = `${chars} char${chars === 1 ? '' : 's'}`;
-        }
+    const text = transcriptEditor.value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const chars = text.length;
+    wordCountEl.textContent = `${words} word${words === 1 ? '' : 's'}`;
+    charCountEl.textContent = `${chars} char${chars === 1 ? '' : 's'}`;
+}
 
-        transcriptEditor.addEventListener('input', () => {
-            finalTranscriptAccumulator = transcriptEditor.value;
-            updateCounts();
-        });
+// Keep Paragraph Output synchronized with Live Transcript & Paragraphs
+function syncParagraphOutput() {
+    paragraphOutput.value = transcriptEditor.value;
+}
+
+transcriptEditor.addEventListener('input', () => {
+    finalTranscriptAccumulator = transcriptEditor.value;
+    updateCounts();
+    syncParagraphOutput();
+});
 
         tellBtn.addEventListener('click', () => {
             const text = transcriptEditor.value.trim();
@@ -742,11 +777,12 @@
         });
 
         clearBtn.addEventListener('click', () => {
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-            transcriptEditor.value = '';
-            finalTranscriptAccumulator = '';
-            updateCounts();
-            showToast("Editor cleared.");
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        transcriptEditor.value = '';
+        finalTranscriptAccumulator = '';
+        updateCounts();
+        syncParagraphOutput();
+        showToast("Editor cleared.");
         });
 
         function getSavedHistory() {
@@ -770,16 +806,27 @@
             }
             const history = getSavedHistory();
             const newNote = {
-                id: Date.now(),
-                date: new Date().toLocaleString(),
-                mode: currentFormattingMode,
-                language: languageSelect.options[languageSelect.selectedIndex].text,
-                fullText: text
-            };
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    mode: currentFormattingMode,
+    language: languageSelect.options[languageSelect.selectedIndex].text,
+    fullText: text,
+
+    // Remember which Google/Firebase account owns this note
+    cloudOwnerUid: window.currentVoiceToParaUserUid || null,
+    cloudSynced: false
+};
             history.unshift(newNote);
-            localStorage.setItem('voice_to_para_notes', JSON.stringify(history));
-            updateSavedNotesBadge();
-            showToast("Note saved successfully!");
+
+localStorage.setItem('voice_to_para_notes', JSON.stringify(history));
+
+if (window.syncNoteToCloud) {
+    window.syncNoteToCloud(newNote);
+}
+
+
+updateSavedNotesBadge();
+showToast("Note saved successfully!");
             
             renderHistoryList();
             historyModal.classList.remove('hidden');
@@ -850,18 +897,21 @@
                 </div>
             `).join('');
         }
+                
+                window.loadHistoryItem = function(id) {
+    const history = getSavedHistory();
+    const item = history.find(h => h.id === id);
 
-        window.loadHistoryItem = function(id) {
-            const history = getSavedHistory();
-            const item = history.find(h => h.id === id);
-            if (item) {
-                transcriptEditor.value = item.fullText;
-                finalTranscriptAccumulator = item.fullText;
-                updateCounts();
-                historyModal.classList.add('hidden');
-                showToast("Note loaded into editor!");
-            }
-        };
+    if (item) {
+        transcriptEditor.value = item.fullText;
+        finalTranscriptAccumulator = item.fullText;
+        updateCounts();
+        syncParagraphOutput();
+
+        historyModal.classList.add('hidden');
+        showToast("Note loaded into editor!");
+    }
+};
 
         window.deleteHistoryItem = function(id) {
             let history = getSavedHistory();
@@ -937,5 +987,239 @@
         updateCounts();
         updateSavedNotesBadge();
     </script>
+<script type="module">
+  import { auth, db, onAuthStateChanged } from "./firebase-config.js";
+
+  import {
+    collection,
+    doc,
+    setDoc,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+  let currentUser = null;
+  window.currentVoiceToParaUserUid = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    window.currentVoiceToParaUserUid = user ? user.uid : null;
+
+    if (user) {
+        console.log("VoiceToPara Firebase user:", user.uid);
+
+               // Cloud → Local
+        await downloadCloudNotes();
+
+        // Local → Cloud
+        await syncPendingNotes();
+
+    } else {
+        console.log("No Firebase user signed in.");
+    }
+});
+
+  async function uploadNoteToFirebase(note) {
+    if (!currentUser) {
+      console.log("Firebase upload waiting for login.");
+      return;
+    }
+
+    if (!navigator.onLine) {
+      console.log("Offline. Note will remain local.");
+      return;
+    }
+
+    try {
+      const noteRef = doc(
+        collection(db, "users", currentUser.uid, "notes"),
+        String(note.id)
+      );
+
+    console.log("🔥 Starting Firestore write...");
+
+await Promise.race([
+  setDoc(noteRef, {
+    fullText: note.fullText,
+    date: note.date,
+    mode: note.mode,
+    language: note.language,
+    createdAtMs: note.id
+  }),
+
+  new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("Firestore write timed out after 10 seconds")),
+      10000
+    )
+  )
+]);
+
+console.log("✅ Firestore write completed:", note.id);
+
+      markNoteAsSynced(note.id);
+    } catch (error) {
+  console.error("❌ Firebase note upload failed:", error);
+  throw error;
+}
+  }
+
+  function markNoteAsSynced(noteId) {
+    try {
+      const notes =
+        JSON.parse(localStorage.getItem("voice_to_para_notes")) || [];
+
+      const updatedNotes = notes.map(note => {
+        if (note.id === noteId) {
+          return {
+            ...note,
+            cloudSynced: true,
+            cloudOwnerUid: currentUser.uid
+          };
+        }
+
+        return note;
+      });
+
+      localStorage.setItem(
+        "voice_to_para_notes",
+        JSON.stringify(updatedNotes)
+      );
+    } catch (error) {
+      console.error("Could not mark note as synced:", error);
+    }
+  }
+
+    async function syncPendingNotes() {
+    if (!currentUser || !navigator.onLine) {
+      return;
+    }
+
+    try {
+      const notes =
+        JSON.parse(localStorage.getItem("voice_to_para_notes")) || [];
+
+      console.log("Checking local notes for Firebase sync...");
+
+      for (const note of notes) {
+
+        // Only upload notes that belong to the
+        // currently signed-in Firebase account
+        // and have not already been synced.
+        if (
+          note.cloudOwnerUid === currentUser.uid &&
+          note.cloudSynced !== true
+        ) {
+          await uploadNoteToFirebase(note);
+        }
+      }
+
+      console.log("Pending note sync completed.");
+
+    } catch (error) {
+      console.error("Pending note sync failed:", error);
+    }
+  }
+  async function downloadCloudNotes() {
+    if (!currentUser || !navigator.onLine) {
+        return;
+    }
+
+    try {
+        console.log("☁️ Checking Firestore for cloud notes...");
+
+        const notesRef = collection(
+            db,
+            "users",
+            currentUser.uid,
+            "notes"
+        );
+
+        const snapshot = await getDocs(notesRef);
+
+        const cloudNotes = [];
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+
+            cloudNotes.push({
+                id: Number(data.createdAtMs || docSnap.id),
+                date: data.date || "",
+                mode: data.mode || "paragraph",
+                language: data.language || "English (United States)",
+                fullText: data.fullText || "",
+                cloudSynced: true,
+                cloudOwnerUid: currentUser.uid
+            });
+        });
+
+        const localNotes =
+            JSON.parse(
+                localStorage.getItem("voice_to_para_notes")
+            ) || [];
+
+        const notesById = new Map();
+
+        for (const note of localNotes) {
+            notesById.set(String(note.id), note);
+        }
+
+        for (const cloudNote of cloudNotes) {
+            const key = String(cloudNote.id);
+
+            if (!notesById.has(key)) {
+                notesById.set(key, cloudNote);
+            } else {
+                const localNote = notesById.get(key);
+
+                notesById.set(key, {
+                    ...localNote,
+                    cloudSynced: true,
+                    cloudOwnerUid: currentUser.uid
+                });
+            }
+        }
+
+        const mergedNotes = Array.from(notesById.values())
+            .sort((a, b) => Number(b.id) - Number(a.id));
+
+        localStorage.setItem(
+            "voice_to_para_notes",
+            JSON.stringify(mergedNotes)
+        );
+
+        updateSavedNotesBadge();
+        renderHistoryList();
+
+        console.log(
+            "☁️ Cloud → Local sync completed:",
+            cloudNotes.length,
+            "cloud notes found."
+        );
+
+    } catch (error) {
+        console.error(
+            "❌ Cloud → Local sync failed:",
+            error
+        );
+    }
+}
+
+  // This function will be called by the existing Save Note system.
+  window.syncNoteToCloud = function(note) {
+    return uploadNoteToFirebase(note);
+};
+
+window.addEventListener("online", async () => {
+    console.log("Internet restored. Syncing notes...");
+
+    // Local → Cloud
+    await syncPendingNotes();
+
+    // Cloud → Local
+    await downloadCloudNotes();
+});
+</script>
+
 </body>
+
 </html>
