@@ -690,39 +690,65 @@ transcriptEditor.addEventListener('input', () => {
 });
 
         tellBtn.addEventListener('click', () => {
-            const text = transcriptEditor.value.trim();
-            if (!text) {
-                showToast("Nothing to tell! Editor is empty.");
-                return;
-            }
-            if (!('speechSynthesis' in window)) {
-                showToast("Text-to-speech not supported in this browser.");
-                return;
-            }
+    const text = transcriptEditor.value.trim();
 
-            window.speechSynthesis.cancel();
+    if (!text) {
+        showToast("Nothing to tell! Editor is empty.");
+        return;
+    }
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = languageSelect.value;
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
+    if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+        showToast("Text-to-speech not supported in this browser.");
+        return;
+    }
 
-            utterance.onstart = () => {
-                showToast("Telling contents out loud...");
-                tellBtn.classList.add('animate-pulse', 'bg-indigo-200');
-            };
+    const synth = window.speechSynthesis;
 
-            utterance.onend = () => {
-                tellBtn.classList.remove('animate-pulse', 'bg-indigo-200');
-            };
+    // Only cancel if speech is already active.
+    // Some mobile browsers can fail the first speech request
+    // when cancel() is called unnecessarily.
+    if (synth.speaking || synth.pending) {
+        synth.cancel();
+    }
 
-            utterance.onerror = () => {
-                tellBtn.classList.remove('animate-pulse', 'bg-indigo-200');
-                showToast("Error reading text.");
-            };
+    const utterance = new SpeechSynthesisUtterance(text);
 
-            window.speechSynthesis.speak(utterance);
-        });
+    utterance.lang = languageSelect.value;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    // Wake up the speech engine on mobile browsers.
+    try {
+        synth.resume();
+    } catch (e) {
+        console.warn("Speech synthesis resume warning:", e);
+    }
+
+    utterance.onstart = () => {
+        showToast("Telling contents out loud...");
+        tellBtn.classList.add('animate-pulse', 'bg-indigo-200');
+    };
+
+    utterance.onend = () => {
+        tellBtn.classList.remove('animate-pulse', 'bg-indigo-200');
+    };
+
+    utterance.onerror = (event) => {
+        tellBtn.classList.remove('animate-pulse', 'bg-indigo-200');
+
+        console.error("Speech synthesis error:", event.error);
+
+        if (event.error === 'canceled' || event.error === 'interrupted') {
+            return;
+        }
+
+        showToast("Error reading text.");
+    };
+
+    // Keep speak() directly inside the button click.
+    // This helps mobile browsers recognize it as user-initiated speech.
+    synth.speak(utterance);
+});
 
         liveShareBtn.addEventListener('click', () => {
             const text = transcriptEditor.value.trim();
