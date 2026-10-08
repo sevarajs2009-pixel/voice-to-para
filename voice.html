@@ -337,13 +337,14 @@
         const formatModeGroup = document.getElementById('formatModeGroup');
 
         let isListening = false;
-        let isToggleMode = false;
-        let currentFormattingMode = 'paragraph';
-        let recognition = null;
-        let finalTranscriptAccumulator = '';
-        let visualizerInterval = null;
-        let micPermissionGranted = false;
-
+let isToggleMode = false;
+let currentFormattingMode = 'paragraph';
+let recognition = null;
+let finalTranscriptAccumulator = '';
+let lastProcessedFinalResultIndex = 0;
+let visualizerInterval = null;
+let micPermissionGranted = false;
+        
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -398,23 +399,49 @@
             recognition.maxAlternatives = 3;
 
             recognition.onstart = () => {
-                isListening = true;
-                updateUIState(true);
-            };
+    isListening = true;
 
-            recognition.onresult = (event) => {
+    // A new recognition session starts with a fresh result index.
+    lastProcessedFinalResultIndex = 0;
+
+    updateUIState(true);
+};
+
+    recognition.onresult = (event) => {
     let interim = '';
     let newFinal = '';
 
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-            newFinal += event.results[i][0].transcript.trim() + ' ';
+    for (
+        let i = event.resultIndex;
+        i < event.results.length;
+        ++i
+    ) {
+        const result = event.results[i];
+
+        if (result.isFinal) {
+
+            // Chrome may send previously-final results again
+            // when a newer result arrives.
+            //
+            // Only process each final result index once.
+            if (i >= lastProcessedFinalResultIndex) {
+                const spokenText = result[0].transcript.trim();
+
+                if (spokenText) {
+                    newFinal += spokenText + ' ';
+                }
+
+                lastProcessedFinalResultIndex = i + 1;
+            }
+
         } else {
-            interim += event.results[i][0].transcript;
+            interim += result[0].transcript;
         }
     }
 
-    if (newFinal) {
+
+    // Add only genuinely new final speech.
+    if (newFinal.trim()) {
         finalTranscriptAccumulator +=
             formatSpokenText(
                 newFinal.trim(),
@@ -425,6 +452,9 @@
             finalTranscriptAccumulator.trim();
 
         updateCounts();
+
+        // Keep INPUT VOICE synchronized with
+        // the finalized OUTPUT speech.
         syncParagraphOutput();
 
         // Hide live speech popup in BOTH boxes
@@ -433,6 +463,9 @@
         inputInterimBadge.classList.add('hidden');
     }
 
+
+    // Show the current unfinished speech
+    // while the user is still speaking.
     if (interim) {
         // OUTPUT live/interim speech
         interimText.textContent = interim;
