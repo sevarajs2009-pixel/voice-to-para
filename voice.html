@@ -123,13 +123,19 @@
     </div>
 
     <!-- Editable Paragraph Output -->
-    <div class="p-6 relative flex flex-col flex-1">
-        <textarea
-            id="paragraphOutput"
-            class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
-            placeholder="Your paragraph output will appear here..."
-        ></textarea>
+<div class="p-6 relative flex flex-col flex-1">
+    <textarea
+        id="paragraphOutput"
+        class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
+        placeholder="Your paragraph output will appear here..."
+    ></textarea>
+
+    <!-- Live Interim Speech Notification Overlay -->
+    <div id="inputInterimBadge" class="absolute bottom-4 left-6 hidden items-center space-x-2 bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 px-3 py-1.5 rounded-xl text-xs shadow-md backdrop-blur-sm animate-pulse">
+        <i class="fa-solid fa-microphone-lines animate-bounce"></i>
+        <span id="inputInterimText" class="truncate max-w-md">Listening...</span>
     </div>
+</div>
 
 </div>
 
@@ -315,6 +321,9 @@
         const pttInstruction = document.getElementById('pttInstruction');
         const interimBadge = document.getElementById('interimBadge');
         const interimText = document.getElementById('interimText');
+
+        const inputInterimBadge = document.getElementById('inputInterimBadge');
+        const inputInterimText = document.getElementById('inputInterimText');
         const headerSaveBtn = document.getElementById('headerSaveBtn');
         const openHistoryBtn = document.getElementById('openHistoryBtn');
         const savedNotesBadgeCount = document.getElementById('savedNotesBadgeCount');
@@ -394,30 +403,46 @@
             };
 
             recognition.onresult = (event) => {
-                let interim = '';
-                let newFinal = '';
+    let interim = '';
+    let newFinal = '';
 
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        newFinal += event.results[i][0].transcript.trim() + ' ';
-                    } else {
-                        interim += event.results[i][0].transcript;
-                    }
-                }
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+            newFinal += event.results[i][0].transcript.trim() + ' ';
+        } else {
+            interim += event.results[i][0].transcript;
+        }
+    }
 
-                if (newFinal) {
-    finalTranscriptAccumulator += formatSpokenText(newFinal.trim(), currentFormattingMode) + ' ';
-    transcriptEditor.value = finalTranscriptAccumulator.trim();
-    updateCounts();
-    syncParagraphOutput();
-    interimBadge.classList.add('hidden');
-}
+    if (newFinal) {
+        finalTranscriptAccumulator +=
+            formatSpokenText(
+                newFinal.trim(),
+                currentFormattingMode
+            ) + ' ';
 
-                if (interim) {
-                    interimText.textContent = interim;
-                    interimBadge.classList.remove('hidden');
-                }
-            };
+        transcriptEditor.value =
+            finalTranscriptAccumulator.trim();
+
+        updateCounts();
+        syncParagraphOutput();
+
+        // Hide live speech popup in BOTH boxes
+        // when the speech becomes final.
+        interimBadge.classList.add('hidden');
+        inputInterimBadge.classList.add('hidden');
+    }
+
+    if (interim) {
+        // OUTPUT live/interim speech
+        interimText.textContent = interim;
+        interimBadge.classList.remove('hidden');
+
+        // INPUT VOICE live/interim speech
+        inputInterimText.textContent = interim;
+        inputInterimBadge.classList.remove('hidden');
+    }
+};
 
             recognition.onerror = (event) => {
                 console.error("Speech recognition error", event.error);
@@ -428,10 +453,13 @@
             };
 
             recognition.onend = () => {
-                isListening = false;
-                updateUIState(false);
-                interimBadge.classList.add('hidden');
-            };
+    isListening = false;
+    updateUIState(false);
+
+    // Hide live speech popup in BOTH boxes
+    interimBadge.classList.add('hidden');
+    inputInterimBadge.classList.add('hidden');
+};
         }
 
         languageSelect.addEventListener('change', async () => {
@@ -897,15 +925,42 @@ tabToggle.addEventListener('click', () => {
     charCountEl.textContent = `${chars} char${chars === 1 ? '' : 's'}`;
 }
 
-// Keep Paragraph Output synchronized with Live Transcript & Paragraphs
+// Keep INPUT VOICE and OUTPUT synchronized
+//
+// This helper is used whenever the application
+// changes INPUT VOICE programmatically.
+function setParagraphOutput(value) {
+    paragraphOutput.value = value;
+    transcriptEditor.value = value;
+    finalTranscriptAccumulator = value;
+    updateCounts();
+}
+
+
+// Keep the existing function name because
+// other parts of the application already call it.
 function syncParagraphOutput() {
     paragraphOutput.value = transcriptEditor.value;
 }
 
+
+// OUTPUT → INPUT VOICE
+// When the user types or edits OUTPUT,
+// INPUT VOICE follows immediately.
 transcriptEditor.addEventListener('input', () => {
     finalTranscriptAccumulator = transcriptEditor.value;
     updateCounts();
     syncParagraphOutput();
+});
+
+
+// INPUT VOICE → OUTPUT
+// When the user types or edits INPUT VOICE,
+// OUTPUT follows immediately.
+paragraphOutput.addEventListener('input', () => {
+    transcriptEditor.value = paragraphOutput.value;
+    finalTranscriptAccumulator = paragraphOutput.value;
+    updateCounts();
 });
 
         tellBtn.addEventListener('click', () => {
