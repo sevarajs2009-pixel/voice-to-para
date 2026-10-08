@@ -420,10 +420,7 @@ let micPermissionGranted = false;
     // Add only genuinely new final speech.
     if (newFinal.trim()) {
         finalTranscriptAccumulator +=
-            formatSpokenText(
-                newFinal.trim(),
-                currentFormattingMode
-            ) + ' ';
+    formatSpokenText(newFinal.trim()) + ' ';
 
         transcriptEditor.value =
             finalTranscriptAccumulator.trim();
