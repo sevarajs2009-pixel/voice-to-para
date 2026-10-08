@@ -591,91 +591,114 @@
             }
         }
 
-        function setPttMode(toggleMode) {
-            isToggleMode = toggleMode;
-            if (isToggleMode) {
-                tabIndicator.style.transform = 'translateX(100%)';
-                tabToggle.classList.remove('text-slate-500', 'dark:text-slate-400');
-                tabToggle.classList.add('text-brand-600', 'dark:text-brand-400');
-                tabHold.classList.remove('text-brand-600', 'dark:text-brand-400');
-                tabHold.classList.add('text-slate-500', 'dark:text-slate-400');
-
-                pttInstruction.textContent = "Click once to start recording, click again to stop";
-                pttButtonLabel.textContent = "CLICK TO START";
-                showToast("Switched to Click Toggle mode");
-            } else {
-                tabIndicator.style.transform = 'translateX(0%)';
-                tabHold.classList.remove('text-slate-500', 'dark:text-slate-400');
-                tabHold.classList.add('text-brand-600', 'dark:text-brand-400');
-                tabToggle.classList.remove('text-brand-600', 'dark:text-brand-400');
-                tabToggle.classList.add('text-slate-500', 'dark:text-slate-400');
-
-                pttInstruction.textContent = "Press & hold spacebar or click button to speak";
-                pttButtonLabel.textContent = "HOLD TO TALK";
-                showToast("Switched to Hold-to-Talk mode");
-            }
-        }
-
-        tabHold.addEventListener('click', () => setPttMode(false));
-        tabToggle.addEventListener('click', () => setPttMode(true));
-
-        // ============================================================
 
         // PTT CONTROLS
-        // Uses Pointer Events so mouse, touch and pen input
-        // follow one consistent event path.
+// Hold-to-Talk:
+//   - Press and hold = ON
+//   - Release = OFF
+//   - Quick click = does nothing
+//
+// Click Toggle:
+//   - First click = ON
+//   - Second click = OFF
+//
+// Pointer Events are used so mouse, touch and pen
+// follow one consistent event path.
 
-        let pttPressActive = false;
-        let startListeningInProgress = false;
-// Start PTT
-async function handlePttStart() {
-    if (isToggleMode) return;
-    if (pttPressActive) return;
+let pttPressActive = false;
+let startListeningInProgress = false;
+let pendingStopRequested = false;
 
-    pttPressActive = true;
 
-    if (startListeningInProgress || isListening) {
-        return;
-    }
+// Start listening safely
+async function startPttListening() {
+    if (startListeningInProgress) return;
 
     startListeningInProgress = true;
+    pendingStopRequested = false;
 
     try {
         await startListening();
     } finally {
         startListeningInProgress = false;
+
+        // If the user released the Hold-to-Talk button
+        // while microphone startup was still waiting,
+        // immediately stop once startup completes.
+        if (pendingStopRequested) {
+            pendingStopRequested = false;
+
+            if (isListening) {
+                stopListening();
+            }
+        }
     }
 }
 
-// Stop PTT
-function handlePttStop() {
-    if (isToggleMode) return;
 
-    pttPressActive = false;
+// Stop listening safely
+function stopPttListening() {
+    pendingStopRequested = true;
 
     if (isListening) {
         stopListening();
     }
 }
 
-// Pointer down works for mouse + touch + pen
+
+// Start Hold-to-Talk
+function handlePttStart() {
+    if (isToggleMode) return;
+    if (pttPressActive) return;
+
+    pttPressActive = true;
+    pendingStopRequested = false;
+
+    if (!isListening && !startListeningInProgress) {
+        startPttListening();
+    }
+}
+
+
+// Stop Hold-to-Talk
+function handlePttStop() {
+    if (isToggleMode) return;
+    if (!pttPressActive) return;
+
+    pttPressActive = false;
+
+    // If startup is still in progress, remember that
+    // the user already released the button.
+    if (startListeningInProgress) {
+        pendingStopRequested = true;
+        return;
+    }
+
+    if (isListening) {
+        stopListening();
+    }
+}
+
+
+// Pointer down = Hold-to-Talk START
 pttButton.addEventListener('pointerdown', (e) => {
     if (isToggleMode) return;
 
     e.preventDefault();
 
-    // Keep receiving pointer events even if the finger/mouse
+    // Keep receiving pointer events even if the pointer
     // moves outside the button.
     try {
         pttButton.setPointerCapture(e.pointerId);
     } catch (err) {
-        // Pointer capture may not be available in every browser.
+        // Pointer capture may not be available.
     }
 
     handlePttStart();
 });
 
-// Pointer up
+
+// Pointer up = Hold-to-Talk STOP
 pttButton.addEventListener('pointerup', (e) => {
     if (isToggleMode) return;
 
@@ -683,7 +706,8 @@ pttButton.addEventListener('pointerup', (e) => {
     handlePttStop();
 });
 
-// If the pointer leaves/cancels unexpectedly
+
+// Pointer cancelled = Hold-to-Talk STOP
 pttButton.addEventListener('pointercancel', (e) => {
     if (isToggleMode) return;
 
@@ -691,38 +715,45 @@ pttButton.addEventListener('pointercancel', (e) => {
     handlePttStop();
 });
 
-// If the pointer leaves the button while pressed,
-// keep listening until release.
+
+// If pointer capture is lost while holding,
+// stop only when the button is no longer being pressed.
 pttButton.addEventListener('lostpointercapture', () => {
     if (isToggleMode) return;
 
-    if (!pttButton.matches(':active')) {
+    if (!pttPressActive || !pttButton.matches(':active')) {
         handlePttStop();
     }
 });
 
-// Toggle mode
+
+// CLICK TOGGLE
+// Click itself is ONLY used for Toggle mode.
+// Hold-to-Talk ignores click completely.
 pttButton.addEventListener('click', (e) => {
     if (!isToggleMode) return;
 
     e.preventDefault();
 
+    // If microphone is already ON, stop immediately.
+    if (isListening) {
+        pendingStopRequested = false;
+        stopListening();
+        return;
+    }
+
+    // If microphone startup is already happening,
+    // do not start another request.
     if (startListeningInProgress) {
         return;
     }
 
-    if (isListening) {
-        stopListening();
-    } else {
-        startListeningInProgress = true;
-
-        startListening().finally(() => {
-            startListeningInProgress = false;
-        });
-    }
+    // Start immediately.
+    startPttListening();
 });
 
-// Spacebar support for Hold-to-Talk
+
+// SPACEBAR SUPPORT FOR HOLD-TO-TALK
 window.addEventListener('keydown', (e) => {
     if (
         e.code === 'Space' &&
@@ -736,6 +767,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
+
 window.addEventListener('keyup', (e) => {
     if (
         e.code === 'Space' &&
@@ -747,6 +779,7 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
+
 // If the page loses focus while holding PTT,
 // make sure recording does not remain stuck.
 window.addEventListener('blur', () => {
@@ -754,6 +787,93 @@ window.addEventListener('blur', () => {
         handlePttStop();
     }
 });
+
+
+// PTT MODE SWITCHING
+// The selected mode takes effect immediately.
+// If the microphone is already ON, keep it running
+// while changing how the button controls it.
+function setPttMode(toggleMode) {
+    isToggleMode = toggleMode;
+
+    if (isToggleMode) {
+        tabIndicator.style.transform = 'translateX(100%)';
+
+        tabToggle.classList.remove(
+            'text-slate-500',
+            'dark:text-slate-400'
+        );
+        tabToggle.classList.add(
+            'text-brand-600',
+            'dark:text-brand-400'
+        );
+
+        tabHold.classList.remove(
+            'text-brand-600',
+            'dark:text-brand-400'
+        );
+        tabHold.classList.add(
+            'text-slate-500',
+            'dark:text-slate-400'
+        );
+
+        pttInstruction.textContent =
+            "Click once to start recording, click again to stop";
+
+        pttButtonLabel.textContent = "CLICK TO START";
+
+        // A previous Hold-to-Talk press must no longer
+        // control the button after switching modes.
+        pttPressActive = false;
+        pendingStopRequested = false;
+
+        showToast("Switched to Click Toggle mode");
+
+    } else {
+        tabIndicator.style.transform = 'translateX(0%)';
+
+        tabHold.classList.remove(
+            'text-slate-500',
+            'dark:text-slate-400'
+        );
+        tabHold.classList.add(
+            'text-brand-600',
+            'dark:text-brand-400'
+        );
+
+        tabToggle.classList.remove(
+            'text-brand-600',
+            'dark:text-brand-400'
+        );
+        tabToggle.classList.add(
+            'text-slate-500',
+            'dark:text-slate-400'
+        );
+
+        pttInstruction.textContent =
+            "Press & hold spacebar or click button to speak";
+
+        pttButtonLabel.textContent = "HOLD TO TALK";
+
+        // A previous Toggle action must no longer
+        // affect Hold-to-Talk state.
+        pttPressActive = false;
+        pendingStopRequested = false;
+
+        showToast("Switched to Hold-to-Talk mode");
+    }
+}
+
+
+tabHold.addEventListener('click', () => {
+    setPttMode(false);
+});
+
+tabToggle.addEventListener('click', () => {
+    setPttMode(true);
+});
+
+
         const modeButtons = formatModeGroup.querySelectorAll('.mode-btn');
         modeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
