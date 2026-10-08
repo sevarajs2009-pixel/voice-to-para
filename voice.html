@@ -311,7 +311,7 @@
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         const toast = document.getElementById('toast');
         const toastText = document.getElementById('toastText');
-        const formatModeGroup = document.getElementById('formatModeGroup');
+        
 
         let isListening = false;
 let isToggleMode = false;
@@ -912,20 +912,7 @@ tabToggle.addEventListener('click', () => {
 });
 
 
-        const modeButtons = formatModeGroup.querySelectorAll('.mode-btn');
-        modeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                modeButtons.forEach(b => {
-                    b.classList.remove('border-brand-600', 'bg-brand-50/50', 'dark:bg-brand-950/30', 'text-brand-700', 'dark:text-brand-300');
-                    b.classList.add('border-slate-200', 'dark:border-slate-700', 'bg-transparent', 'text-slate-700', 'dark:text-slate-300');
-                });
-                btn.classList.add('border-brand-600', 'bg-brand-50/50', 'dark:bg-brand-950/30', 'text-brand-700', 'dark:text-brand-300');
-                btn.classList.remove('border-slate-200', 'dark:border-slate-700', 'bg-transparent', 'text-slate-700', 'dark:text-slate-300');
-
-                currentFormattingMode = btn.getAttribute('data-mode');
-                showToast("Mode changed to " + btn.querySelector('span').textContent);
-            });
-        });
+        
 
         function updateCounts() {
     const text = transcriptEditor.value.trim();
@@ -1124,7 +1111,7 @@ paragraphOutput.addEventListener('input', () => {
             const newNote = {
     id: Date.now(),
     date: new Date().toLocaleString(),
-    mode: currentFormattingMode,
+    mode: "plain",
     language: languageSelect.options[languageSelect.selectedIndex].text,
     fullText: text,
 
