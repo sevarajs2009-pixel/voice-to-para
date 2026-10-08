@@ -66,14 +66,14 @@
     </header>
 
 
-   
+
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col space-y-6">
 
         <!-- PTT Box with Embedded Tab Switcher (Placed at the top) -->
             <div class="md:col-span-7 bg-gradient-to-br from-brand-600/10 via-brand-600/5 to-transparent border border-brand-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
                 <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                
+
                 <!-- Animated Tab Switcher INSIDE the PTT Box -->
                 <div class="relative w-full max-w-[240px] flex bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-xl shadow-inner mb-4">
                     <div id="tabIndicator" class="absolute top-1 bottom-1 w-[calc(50%-4px)] left-1 bg-white dark:bg-slate-900 rounded-lg shadow-md transition-all duration-300 ease-in-out"></div>
@@ -111,18 +111,44 @@
                 </div>
             </div>
 
-        </div>
+            <!-- Paragraph Output Box -->
+<div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-h-[320px]">
 
-    
+    <!-- Paragraph Output Header -->
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <h2 class="font-semibold text-slate-800 dark:text-slate-100 flex items-center">
+            <i class="fa-solid fa-file-lines text-brand-600 mr-2"></i>
+            Paragraph Output
+        </h2>
+    </div>
 
-        
-        
+    <!-- Editable Paragraph Output -->
+    <div class="p-6 relative flex flex-col flex-1">
+        <textarea
+            id="paragraphOutput"
+            class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
+            placeholder="Your paragraph output will appear here..."
+        ></textarea>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
         <!-- Top Panel: Live Transcript & Paragraphs Editor -->
         <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-h-[420px]">
-            
+
             <!-- Reorganized Header Toolbar with distinct grouped sections -->
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
-                
+
                 <!-- Left Group: Title & Language Selector -->
                 <div class="flex flex-wrap items-center gap-3">
                     <h2 class="font-semibold text-slate-800 dark:text-slate-100 flex items-center">
@@ -194,7 +220,7 @@
             <!-- Editable Text Area -->
             <div class="p-6 relative flex flex-col flex-1">
                 <textarea id="transcriptEditor" class="w-full h-48 bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Speak clearly or click PTT button below to dictate your thoughts into clean paragraphs..."></textarea>
-                
+
                 <!-- Live Interim Speech Notification Overlay -->
                 <div id="interimBadge" class="absolute bottom-4 left-6 hidden items-center space-x-2 bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 px-3 py-1.5 rounded-xl text-xs shadow-md backdrop-blur-sm animate-pulse">
                     <i class="fa-solid fa-microphone-lines animate-bounce"></i>
@@ -214,33 +240,10 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    </div>
 
-        <!-- Paragraph Output Box -->
-        <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-h-[320px]">
-            
-            <!-- Paragraph Output Header -->
-            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                <h2 class="font-semibold text-slate-800 dark:text-slate-100 flex items-center">
-                    <i class="fa-solid fa-file-lines text-brand-600 mr-2"></i>
-                    Paragraph Output
-                </h2>
-            </div>
-
-            <!-- Editable Paragraph Output -->
-            <div class="p-6 relative flex flex-col flex-1">
-                <textarea
-                    id="paragraphOutput"
-                    class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
-                    placeholder="Your paragraph output will appear here..."
-                ></textarea>
-            </div>
-
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-            
             <!-- Format Style Selector -->
+
+
             <div class="md:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between">
@@ -262,7 +265,7 @@
                 </div>
             </div>
             </main>
-            
+
 
     <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
@@ -436,7 +439,7 @@
                 recognition.lang = languageSelect.value;
                 const langName = languageSelect.options[languageSelect.selectedIndex].text;
                 showToast("Switching language to " + langName + "...");
-                
+
                 const currentText = transcriptEditor.value.trim();
                 if (currentText) {
                     await translateContentToLanguage(languageSelect.value, langName);
@@ -487,7 +490,7 @@
                 } else {
                     text = text + ` (${langName})`;
                 }
-                
+
                 transcriptEditor.value = text;
                 finalTranscriptAccumulator = text;
                 updateCounts();
@@ -566,7 +569,7 @@
 
         async function startListening() {
             if (!recognition || isListening) return;
-            
+
             // Ensure permission is secured once to prevent browser permission prompts on every click
             const allowed = await ensureMicPermission();
             if (!allowed) return;
@@ -596,7 +599,7 @@
                 tabToggle.classList.add('text-brand-600', 'dark:text-brand-400');
                 tabHold.classList.remove('text-brand-600', 'dark:text-brand-400');
                 tabHold.classList.add('text-slate-500', 'dark:text-slate-400');
-                
+
                 pttInstruction.textContent = "Click once to start recording, click again to stop";
                 pttButtonLabel.textContent = "CLICK TO START";
                 showToast("Switched to Click Toggle mode");
@@ -606,7 +609,7 @@
                 tabHold.classList.add('text-brand-600', 'dark:text-brand-400');
                 tabToggle.classList.remove('text-brand-600', 'dark:text-brand-400');
                 tabToggle.classList.add('text-slate-500', 'dark:text-slate-400');
-                
+
                 pttInstruction.textContent = "Press & hold spacebar or click button to speak";
                 pttButtonLabel.textContent = "HOLD TO TALK";
                 showToast("Switched to Hold-to-Talk mode");
@@ -760,7 +763,7 @@ window.addEventListener('blur', () => {
                 });
                 btn.classList.add('border-brand-600', 'bg-brand-50/50', 'dark:bg-brand-950/30', 'text-brand-700', 'dark:text-brand-300');
                 btn.classList.remove('border-slate-200', 'dark:border-slate-700', 'bg-transparent', 'text-slate-700', 'dark:text-slate-300');
-                
+
                 currentFormattingMode = btn.getAttribute('data-mode');
                 showToast("Mode changed to " + btn.querySelector('span').textContent);
             });
@@ -955,7 +958,7 @@ if (window.syncNoteToCloud) {
 
 updateSavedNotesBadge();
 showToast("Note saved successfully!");
-            
+
             renderHistoryList();
             historyModal.classList.remove('hidden');
         }
@@ -980,7 +983,7 @@ showToast("Note saved successfully!");
                 historyListContainer.innerHTML = `<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-bookmark text-3xl mb-2 opacity-50"></i><p class="text-sm">No saved notes yet. Click "Save Note" to store dictations here.</p></div>`;
                 return;
             }
-            
+
             historyListContainer.innerHTML = history.map(item => `
                 <div class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-800/50 hover:border-brand-500/50 transition flex flex-col space-y-3">
                     <div class="flex items-center justify-between text-xs text-slate-400">
@@ -991,7 +994,7 @@ showToast("Note saved successfully!");
                         </div>
                     </div>
                     <p class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">${item.fullText}</p>
-                    
+
                     <!-- Action & Sharing Bar -->
                     <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
                         <div class="flex items-center space-x-2">
@@ -1004,7 +1007,7 @@ showToast("Note saved successfully!");
                                 <span>Delete</span>
                             </button>
                         </div>
-                        
+
                         <!-- Sharing Options -->
                         <div class="flex items-center space-x-1.5">
                             <span class="text-[11px] text-slate-400 mr-1"><i class="fa-solid fa-share-nodes"></i> Share:</span>
@@ -1025,7 +1028,7 @@ showToast("Note saved successfully!");
                 </div>
             `).join('');
         }
-                
+
                 window.loadHistoryItem = function(id) {
     const history = getSavedHistory();
     const item = history.find(h => h.id === id);
