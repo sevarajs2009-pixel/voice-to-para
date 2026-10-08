@@ -100,6 +100,57 @@
                 </button>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-3" id="pttInstruction">Press & hold spacebar or click button to speak</p>
 
+<!-- Speech/Input Language Selector -->
+<div class="mt-4 flex items-center space-x-2 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl shadow-sm">
+    <i class="fa-solid fa-language text-brand-600 text-xs"></i>
+
+    <label
+        for="speechLanguageSelect"
+        class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+        Speech:
+    </label>
+
+    <select
+        id="speechLanguageSelect"
+        class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
+
+        <optgroup label="Popular Languages">
+            <option value="en-US">English (United States)</option>
+            <option value="en-GB">English (United Kingdom)</option>
+            <option value="hi-IN">Hindi (हिन्दी)</option>
+            <option value="ta-IN">Tamil (தமிழ்)</option>
+            <option value="te-IN">Telugu (తెలుగు)</option>
+            <option value="es-ES">Spanish (Español)</option>
+            <option value="fr-FR">French (Français)</option>
+            <option value="de-DE">German (Deutsch)</option>
+            <option value="zh-CN">Chinese Simplified (简体中文)</option>
+            <option value="ja-JP">Japanese (日本語)</option>
+        </optgroup>
+
+        <optgroup label="Other Regional & Global Languages">
+            <option value="ar-SA">Arabic (العربية)</option>
+            <option value="bn-IN">Bengali (বাংলা)</option>
+            <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+            <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+            <option value="ml-IN">Malayalam (മലയാളം)</option>
+            <option value="mr-IN">Marathi (मराठी)</option>
+            <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+            <option value="it-IT">Italian (Italiano)</option>
+            <option value="ko-KR">Korean (한국어)</option>
+            <option value="nl-NL">Dutch (Nederlands)</option>
+            <option value="pl-PL">Polish (Polski)</option>
+            <option value="pt-BR">Portuguese (Português)</option>
+            <option value="ru-RU">Russian (Русский)</option>
+            <option value="tr-TR">Turkish (Türkçe)</option>
+            <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
+            <option value="id-ID">Indonesian (Bahasa Indonesia)</option>
+            <option value="th-TH">Thai (ไทย)</option>
+        </optgroup>
+
+    </select>
+</div>
+
+<!-- Audio Visualizer Waves -->
                 <!-- Audio Visualizer Waves -->
                 <div id="visualizer" class="flex items-center space-x-1 h-6 mt-3 opacity-30 transition-opacity">
                     <div class="w-1 bg-brand-600 rounded-full h-2 transition-all duration-150" id="bar1"></div>
@@ -195,15 +246,24 @@
                                 <option value="th-TH">Thai (ไทย)</option>
                             </optgroup>
                         </select>
-                    </div>
-                </div>
+                        
+</div>
+
+<!-- Tell button: directly under language selector -->
+<div class="w-full">
+    <button id="tellBtn"
+        class="w-full px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition flex items-center justify-center space-x-1.5"
+        title="Read Aloud / Tell Content">
+        <i class="fa-solid fa-volume-high"></i>
+        <span>Tell</span>
+    </button>
+</div>
+                    
+</div>
 
                 <!-- Right Group: Clean Organized Action Buttons -->
-                <div class="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
-                    <button id="tellBtn" class="px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition flex items-center space-x-1.5 shrink-0" title="Read Aloud / Tell Content">
-                        <i class="fa-solid fa-volume-high"></i>
-                        <span>Tell</span>
-                    </button>
+                <div class="flex items-center flex-wrap gap-2">
+                    
                     <button id="liveShareBtn" class="px-3 py-1.5 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50 text-xs font-semibold text-sky-700 dark:text-sky-300 hover:bg-sky-100 transition flex items-center space-x-1.5 shrink-0" title="Share Paragraph">
                         <i class="fa-solid fa-share-nodes"></i>
                         <span>Share</span>
@@ -292,6 +352,7 @@
         const tellBtn = document.getElementById('tellBtn');
         const liveShareBtn = document.getElementById('liveShareBtn');
         const languageSelect = document.getElementById('languageSelect');
+        const speechLanguageSelect = document.getElementById('speechLanguageSelect');
         const tabHold = document.getElementById('tabHold');
         const tabToggle = document.getElementById('tabToggle');
         const tabIndicator = document.getElementById('tabIndicator');
@@ -370,10 +431,14 @@ let micPermissionGranted = false;
             pttButton.disabled = true;
         } else {
             recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = languageSelect.value;
-            recognition.maxAlternatives = 3;
+recognition.continuous = true;
+recognition.interimResults = true;
+
+// Speech recognition uses the language
+// selected in the PTT Speech selector.
+recognition.lang = speechLanguageSelect.value;
+
+recognition.maxAlternatives = 3;
 
             recognition.onstart = () => {
     isListening = true;
@@ -470,17 +535,43 @@ let micPermissionGranted = false;
         }
 
         languageSelect.addEventListener('change', async () => {
-            if (recognition) {
-                recognition.lang = languageSelect.value;
-                const langName = languageSelect.options[languageSelect.selectedIndex].text;
-                showToast("Switching language to " + langName + "...");
+    const langName =
+        languageSelect.options[languageSelect.selectedIndex].text;
 
-                const currentText = transcriptEditor.value.trim();
-                if (currentText) {
-                    await translateContentToLanguage(languageSelect.value, langName);
-                }
-            }
-        });
+    showToast("Switching output language to " + langName + "...");
+
+    const currentText = transcriptEditor.value.trim();
+
+    if (currentText) {
+        await translateContentToLanguage(
+            languageSelect.value,
+            langName
+        );
+    }
+});
+
+        // Speech/Input language selector
+// This controls only the language used by
+// microphone speech recognition.
+speechLanguageSelect.addEventListener('change', () => {
+    const selectedLanguage =
+        speechLanguageSelect.options[
+            speechLanguageSelect.selectedIndex
+        ].text;
+
+    if (recognition) {
+        recognition.lang = speechLanguageSelect.value;
+    }
+
+    // If recognition is currently active, stop the
+    // current session so the new language is used
+    // when the next PTT session starts.
+    if (isListening) {
+        stopListening();
+    }
+
+    showToast("Speech language changed to " + selectedLanguage);
+});
 
         async function translateContentToLanguage(langCode, langName) {
             let text = transcriptEditor.value.trim();
@@ -603,19 +694,28 @@ let micPermissionGranted = false;
         }
 
         async function startListening() {
-            if (!recognition || isListening) return;
+    if (!recognition || isListening) return;
 
-            // Ensure permission is secured once to prevent browser permission prompts on every click
-            const allowed = await ensureMicPermission();
-            if (!allowed) return;
+    // Ensure permission is secured once to prevent browser permission prompts on every click
+    const allowed = await ensureMicPermission();
+    if (!allowed) return;
 
-            try {
-                finalTranscriptAccumulator = transcriptEditor.value ? transcriptEditor.value + ' ' : '';
-                recognition.start();
-            } catch (e) {
-                console.error(e);
-            }
-        }
+    try {
+        // Always use the language currently selected
+        // in the Speech/Input language selector.
+        recognition.lang = speechLanguageSelect.value;
+
+        finalTranscriptAccumulator =
+            transcriptEditor.value
+                ? transcriptEditor.value + ' '
+                : '';
+
+        recognition.start();
+
+    } catch (e) {
+        console.error(e);
+    }
+}
 
         function stopListening() {
             if (!recognition || !isListening) return;
