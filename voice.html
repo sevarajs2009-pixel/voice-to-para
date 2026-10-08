@@ -1163,14 +1163,32 @@ showToast("Note saved successfully!");
         showToast("Note loaded into editor!");
     }
 };
+        window.deleteHistoryItem = async function(id) {
+    // Remove the note from the local history immediately.
+    let history = getSavedHistory();
 
-        window.deleteHistoryItem = function(id) {
-            let history = getSavedHistory();
-            history = history.filter(h => h.id !== id);
-            localStorage.setItem('voice_to_para_notes', JSON.stringify(history));
-            renderHistoryList();
-            showToast("Note deleted.");
-        };
+    history = history.filter(h => h.id !== id);
+
+    localStorage.setItem(
+        'voice_to_para_notes',
+        JSON.stringify(history)
+    );
+
+    updateSavedNotesBadge();
+    renderHistoryList();
+
+    // Also delete the same note from Firebase.
+    if (window.deleteNoteFromCloud) {
+        const cloudDeleted = await window.deleteNoteFromCloud(id);
+
+        if (!cloudDeleted) {
+            showToast("Note removed locally, but cloud delete failed.");
+            return;
+        }
+    }
+
+    showToast("Note deleted.");
+};
 
         window.shareViaWebAPI = function(id) {
             const history = getSavedHistory();
@@ -1241,11 +1259,12 @@ showToast("Note saved successfully!");
 <script type="module">
   import { auth, db, onAuthStateChanged } from "./firebase-config.js";
 
-  import {
+import {
     collection,
     doc,
     setDoc,
-    getDocs
+    getDocs,
+    deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   let currentUser = null;
@@ -1458,6 +1477,36 @@ console.log("✅ Firestore write completed:", note.id);
   // This function will be called by the existing Save Note system.
   window.syncNoteToCloud = function(note) {
     return uploadNoteToFirebase(note);
+};
+
+// Delete a note from Firebase Firestore
+window.deleteNoteFromCloud = async function(noteId) {
+    if (!currentUser) {
+        console.log("Firebase delete waiting for login.");
+        return false;
+    }
+
+    if (!navigator.onLine) {
+        console.log("Offline. Cloud note was not deleted.");
+        return false;
+    }
+
+    try {
+        const noteRef = doc(
+            collection(db, "users", currentUser.uid, "notes"),
+            String(noteId)
+        );
+
+        await deleteDoc(noteRef);
+
+        console.log("🗑️ Firebase note deleted:", noteId);
+
+        return true;
+
+    } catch (error) {
+        console.error("❌ Firebase note delete failed:", error);
+        return false;
+    }
 };
 
 window.addEventListener("online", async () => {
