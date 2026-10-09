@@ -27,6 +27,58 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* INPUT VOICE: small by default */
+#inputVoiceBox {
+    height: 100px;
+    min-height: 100px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    transition: height 0.2s ease;
+}
+
+/* Keep the textarea area within the small box */
+#inputVoiceBox:not(.input-voice-expanded) .input-voice-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 8px 16px;
+}
+
+#inputVoiceBox:not(.input-voice-expanded) #paragraphOutput {
+    height: 100%;
+    min-height: 0;
+    resize: none;
+}
+
+/* Expand only INPUT VOICE, centered over the page */
+#inputVoiceBox.input-voice-expanded {
+    position: relative;
+    transform: none;
+    width: 100%;
+    height: 23vh;
+    min-height: 0;
+    max-width: none;
+    max-height: none;
+    z-index: 1;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* Let the expanded textarea fill the available space */
+#inputVoiceBox.input-voice-expanded .input-voice-content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#inputVoiceBox.input-voice-expanded #paragraphOutput {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+    resize: none;
+}
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 4px; }
@@ -66,14 +118,14 @@
     </header>
 
 
-
+   
 
     <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col space-y-6">
 
         <!-- PTT Box with Embedded Tab Switcher (Placed at the top) -->
             <div class="md:col-span-7 bg-gradient-to-br from-brand-600/10 via-brand-600/5 to-transparent border border-brand-500/30 rounded-2xl p-6 text-center flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
                 <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
+                
                 <!-- Animated Tab Switcher INSIDE the PTT Box -->
                 <div class="relative w-full max-w-[240px] flex bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-xl shadow-inner mb-4">
                     <div id="tabIndicator" class="absolute top-1 bottom-1 w-[calc(50%-4px)] left-1 bg-white dark:bg-slate-900 rounded-lg shadow-md transition-all duration-300 ease-in-out"></div>
@@ -99,58 +151,38 @@
                     <span class="text-[10px] font-bold tracking-wider uppercase" id="pttButtonLabel">HOLD TO TALK</span>
                 </button>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-3" id="pttInstruction">Press & hold spacebar or click button to speak</p>
-
-<!-- Speech/Input Language Selector -->
-<div class="mt-4 flex items-center space-x-2 bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl shadow-sm">
-    <i class="fa-solid fa-language text-brand-600 text-xs"></i>
-
-    <label
-        for="speechLanguageSelect"
-        class="text-xs font-semibold text-slate-600 dark:text-slate-300">
-        Speech:
+                
+<!-- Language the user will speak -->
+<div class="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-xl mb-4">
+    <i class="fa-solid fa-microphone text-brand-600 text-xs"></i>
+    <label for="speechLanguageSelect" class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+        Speak in:
     </label>
-
-    <select
-        id="speechLanguageSelect"
+    <select id="speechLanguageSelect"
         class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer">
-
-        <optgroup label="Popular Languages">
-            <option value="en-US">English (United States)</option>
-            <option value="en-GB">English (United Kingdom)</option>
-            <option value="hi-IN">Hindi (हिन्दी)</option>
-            <option value="ta-IN">Tamil (தமிழ்)</option>
-            <option value="te-IN">Telugu (తెలుగు)</option>
-            <option value="es-ES">Spanish (Español)</option>
-            <option value="fr-FR">French (Français)</option>
-            <option value="de-DE">German (Deutsch)</option>
-            <option value="zh-CN">Chinese Simplified (简体中文)</option>
-            <option value="ja-JP">Japanese (日本語)</option>
-        </optgroup>
-
-        <optgroup label="Other Regional & Global Languages">
-            <option value="ar-SA">Arabic (العربية)</option>
-            <option value="bn-IN">Bengali (বাংলা)</option>
-            <option value="gu-IN">Gujarati (ગુજરાતી)</option>
-            <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
-            <option value="ml-IN">Malayalam (മലയാളം)</option>
-            <option value="mr-IN">Marathi (मराठी)</option>
-            <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
-            <option value="it-IT">Italian (Italiano)</option>
-            <option value="ko-KR">Korean (한국어)</option>
-            <option value="nl-NL">Dutch (Nederlands)</option>
-            <option value="pl-PL">Polish (Polski)</option>
-            <option value="pt-BR">Portuguese (Português)</option>
-            <option value="ru-RU">Russian (Русский)</option>
-            <option value="tr-TR">Turkish (Türkçe)</option>
-            <option value="vi-VN">Vietnamese (Tiếng Việt)</option>
-            <option value="id-ID">Indonesian (Bahasa Indonesia)</option>
-            <option value="th-TH">Thai (ไทย)</option>
-        </optgroup>
-
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="hi-IN">Hindi (हिन्दी)</option>
+        <option value="ta-IN">Tamil (தமிழ்)</option>
+        <option value="te-IN">Telugu (తెలుగు)</option>
+        <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+        <option value="ml-IN">Malayalam (മലയാളം)</option>
+        <option value="bn-IN">Bengali (বাংলা)</option>
+        <option value="mr-IN">Marathi (मराठी)</option>
+        <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+        <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+        <option value="es-ES">Spanish</option>
+        <option value="fr-FR">French</option>
+        <option value="de-DE">German</option>
+        <option value="ar-SA">Arabic</option>
+        <option value="zh-CN">Chinese (Simplified)</option>
+        <option value="ja-JP">Japanese</option>
+        <option value="ko-KR">Korean</option>
+        <option value="it-IT">Italian</option>
+        <option value="pt-BR">Portuguese</option>
+        <option value="ru-RU">Russian</option>
     </select>
 </div>
-
-<!-- Audio Visualizer Waves -->
                 <!-- Audio Visualizer Waves -->
                 <div id="visualizer" class="flex items-center space-x-1 h-6 mt-3 opacity-30 transition-opacity">
                     <div class="w-1 bg-brand-600 rounded-full h-2 transition-all duration-150" id="bar1"></div>
@@ -161,51 +193,34 @@
                     <div class="w-1 bg-brand-600 rounded-full h-2 transition-all duration-150" id="bar6"></div>
                 </div>
             </div>
-
-            <!-- Paragraph Output Box -->
-<div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-h-[320px]">
-
-    <!-- Paragraph Output Header -->
-    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              
+<!-- INPUT Box -->
+<div id="inputVoiceBox" class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+    <!-- INPUT VOICE Header -->
+    <div id="inputVoiceHeader" title="Click to expand or shrink INPUT VOICE" class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none">
         <h2 class="font-semibold text-slate-800 dark:text-slate-100 flex items-center">
             <i class="fa-solid fa-file-lines text-brand-600 mr-2"></i>
             INPUT VOICE
         </h2>
     </div>
 
-    <!-- Editable Paragraph Output -->
-<div class="p-6 relative flex flex-col flex-1">
-    <textarea
-        id="paragraphOutput"
-        class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
-        placeholder="Your paragraph output will appear here..."
-    ></textarea>
-
-    <!-- Live Interim Speech Notification Overlay -->
-    <div id="inputInterimBadge" class="absolute bottom-4 left-6 hidden items-center space-x-2 bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 px-3 py-1.5 rounded-xl text-xs shadow-md backdrop-blur-sm animate-pulse">
-        <i class="fa-solid fa-microphone-lines animate-bounce"></i>
-        <span id="inputInterimText" class="truncate max-w-md">Listening...</span>
+    <!-- Editable INPUT -->
+    <div class="p-6 relative flex flex-col flex-1 input-voice-content">
+        <textarea
+            id="paragraphOutput"
+            class="w-full min-h-[240px] bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400"
+            placeholder="Your paragraph output will appear here..."
+        ></textarea>
     </div>
-</div>
 
 </div>
 
-
-
-
-
-
-
-
-
-
-
-        <!-- Top Panel: Live Transcript & Paragraphs Editor -->
+            <!-- Top Panel: Live Transcript & Paragraphs Editor -->
         <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden min-h-[420px]">
-
+            
             <!-- Reorganized Header Toolbar with distinct grouped sections -->
             <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
-
+                
                 <!-- Left Group: Title & Language Selector -->
                 <div class="flex flex-wrap items-center gap-3">
                     <h2 class="font-semibold text-slate-800 dark:text-slate-100 flex items-center">
@@ -246,24 +261,43 @@
                                 <option value="th-TH">Thai (ไทย)</option>
                             </optgroup>
                         </select>
-                        
-</div>
+                    </div>
+                </div>
+                
+<!-- Compact OUTPUT Playback Speed -->
+<div class="w-full sm:w-52 shrink-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2">
 
-<!-- Tell button: directly under language selector -->
-<div class="w-full">
-    <button id="tellBtn"
-        class="w-full px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition flex items-center justify-center space-x-1.5"
-        title="Read Aloud / Tell Content">
-        <i class="fa-solid fa-volume-high"></i>
-        <span>Tell</span>
-    </button>
+    <div class="flex items-center justify-between gap-2">
+        <label for="speechSpeed" class="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <i class="fa-solid fa-gauge-high mr-1 text-brand-600"></i>
+            Speed
+        </label>
+        <span id="speechSpeedValue" class="text-xs font-bold text-brand-600 dark:text-brand-400">1.0×</span>
+    </div>
+
+    <input
+        id="speechSpeed"
+        type="range"
+        min="0.5"
+        max="2"
+        step="0.1"
+        value="1"
+        class="w-full accent-indigo-600 cursor-pointer"
+    />
+
+    <div class="flex justify-between text-[10px] text-slate-400">
+        <span>0.5×</span>
+        <span>2.0×</span>
+    </div>
 </div>
-                    
-</div>
+<!-- End OUTPUT Audio Controls -->
 
                 <!-- Right Group: Clean Organized Action Buttons -->
-                <div class="flex items-center flex-wrap gap-2">
-                    
+                <div class="flex items-center space-x-2 overflow-x-auto pb-1 sm:pb-0">
+                    <button id="tellBtn" class="px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition flex items-center space-x-1.5 shrink-0" title="Read Aloud / Tell Content">
+                        <i class="fa-solid fa-volume-high"></i>
+                        <span>Tell</span>
+                    </button>
                     <button id="liveShareBtn" class="px-3 py-1.5 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950/50 text-xs font-semibold text-sky-700 dark:text-sky-300 hover:bg-sky-100 transition flex items-center space-x-1.5 shrink-0" title="Share Paragraph">
                         <i class="fa-solid fa-share-nodes"></i>
                         <span>Share</span>
@@ -284,9 +318,9 @@
             </div>
 
             <!-- Editable Text Area -->
-            <div class="p-6 relative flex flex-col flex-1">
+            <div class="p-6 relative flex flex-col flex-1 input-voice-content">
                 <textarea id="transcriptEditor" class="w-full h-48 bg-transparent resize-y focus:outline-none text-base leading-relaxed text-slate-700 dark:text-slate-200 placeholder-slate-400" placeholder="Speak clearly or click PTT button below to dictate your thoughts into clean paragraphs..."></textarea>
-
+                
                 <!-- Live Interim Speech Notification Overlay -->
                 <div id="interimBadge" class="absolute bottom-4 left-6 hidden items-center space-x-2 bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 px-3 py-1.5 rounded-xl text-xs shadow-md backdrop-blur-sm animate-pulse">
                     <i class="fa-solid fa-microphone-lines animate-bounce"></i>
@@ -306,9 +340,35 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    </div>
 
+        
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            <!-- Format Style Selector -->
+            <div class="md:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center justify-between">
+                        <span><i class="fa-solid fa-wand-magic-sparkles text-brand-600 mr-2"></i>Formatting Style</span>
+                        <span class="text-xs text-slate-400 font-normal">AI Structure</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-3" id="formatModeGroup">
+                        <button data-mode="paragraph" class="mode-btn p-3.5 rounded-xl border-2 border-brand-600 bg-brand-50/50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 text-xs font-semibold text-left flex flex-col space-y-1.5 transition">
+                            <i class="fa-solid fa-align-left text-sm"></i>
+                            <span>Pro Paragraphs</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">Standard structured</span>
+                        </button>
+                        <button data-mode="bullets" class="mode-btn p-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-300 text-xs font-semibold text-left flex flex-col space-y-1.5 transition hover:border-slate-300">
+                            <i class="fa-solid fa-list-ul text-sm"></i>
+                            <span>Bullet Points</span>
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-normal">Key takeaways & lists</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
             </main>
-
+            
 
     <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
@@ -345,6 +405,12 @@
         const visualizer = document.getElementById('visualizer');
         const transcriptEditor = document.getElementById('transcriptEditor');
         const paragraphOutput = document.getElementById('paragraphOutput');
+        const inputVoiceBox = document.getElementById('inputVoiceBox');
+const inputVoiceHeader = document.getElementById('inputVoiceHeader');
+
+inputVoiceHeader.addEventListener('click', () => {
+    inputVoiceBox.classList.toggle('input-voice-expanded');
+});
         const wordCountEl = document.getElementById('wordCount');
         const charCountEl = document.getElementById('charCount');
         const copyBtn = document.getElementById('copyBtn');
@@ -353,15 +419,21 @@
         const liveShareBtn = document.getElementById('liveShareBtn');
         const languageSelect = document.getElementById('languageSelect');
         const speechLanguageSelect = document.getElementById('speechLanguageSelect');
+        const speechSpeed = document.getElementById('speechSpeed');
+const speechSpeedValue = document.getElementById('speechSpeedValue');
+
+speechSpeed.addEventListener('input', () => {
+    speechSpeedValue.textContent =
+        `${Number(speechSpeed.value).toFixed(1)}×`;
+});
+
+
         const tabHold = document.getElementById('tabHold');
         const tabToggle = document.getElementById('tabToggle');
         const tabIndicator = document.getElementById('tabIndicator');
         const pttInstruction = document.getElementById('pttInstruction');
         const interimBadge = document.getElementById('interimBadge');
         const interimText = document.getElementById('interimText');
-
-        const inputInterimBadge = document.getElementById('inputInterimBadge');
-        const inputInterimText = document.getElementById('inputInterimText');
         const headerSaveBtn = document.getElementById('headerSaveBtn');
         const openHistoryBtn = document.getElementById('openHistoryBtn');
         const savedNotesBadgeCount = document.getElementById('savedNotesBadgeCount');
@@ -372,17 +444,16 @@
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         const toast = document.getElementById('toast');
         const toastText = document.getElementById('toastText');
-        
+        const formatModeGroup = document.getElementById('formatModeGroup');
 
         let isListening = false;
-let isToggleMode = false;
+        let isToggleMode = false;
+        let currentFormattingMode = 'paragraph';
+        let recognition = null;
+        let finalTranscriptAccumulator = '';
+        let visualizerInterval = null;
+        let micPermissionGranted = false;
 
-let recognition = null;
-let finalTranscriptAccumulator = '';
-let lastProcessedFinalResultIndex = 0;
-let visualizerInterval = null;
-let micPermissionGranted = false;
-        
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -431,90 +502,41 @@ let micPermissionGranted = false;
             pttButton.disabled = true;
         } else {
             recognition = new SpeechRecognition();
-recognition.continuous = true;
-recognition.interimResults = true;
-
-// Speech recognition uses the language
-// selected in the PTT Speech selector.
-recognition.lang = speechLanguageSelect.value;
-
-recognition.maxAlternatives = 3;
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = speechLanguageSelect.value;
+            recognition.maxAlternatives = 3;
 
             recognition.onstart = () => {
-    isListening = true;
+                isListening = true;
+                updateUIState(true);
+            };
 
-    // A new recognition session starts with a fresh result index.
-    lastProcessedFinalResultIndex = 0;
+            recognition.onresult = (event) => {
+                let interim = '';
+                let newFinal = '';
 
-    updateUIState(true);
-};
-
-    recognition.onresult = (event) => {
-    let interim = '';
-    let newFinal = '';
-
-    for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        ++i
-    ) {
-        const result = event.results[i];
-
-        if (result.isFinal) {
-
-            // Chrome may send previously-final results again
-            // when a newer result arrives.
-            //
-            // Only process each final result index once.
-            if (i >= lastProcessedFinalResultIndex) {
-                const spokenText = result[0].transcript.trim();
-
-                if (spokenText) {
-                    newFinal += spokenText + ' ';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        newFinal += event.results[i][0].transcript.trim() + ' ';
+                    } else {
+                        interim += event.results[i][0].transcript;
+                    }
                 }
 
-                lastProcessedFinalResultIndex = i + 1;
-            }
+                if (newFinal) {
+    finalTranscriptAccumulator += formatSpokenText(newFinal.trim(), currentFormattingMode) + ' ';
+    transcriptEditor.value = finalTranscriptAccumulator.trim();
+    updateCounts();
+    syncParagraphOutput();
+    interimBadge.classList.add('hidden');
+}
 
-        } else {
-            interim += result[0].transcript;
-        }
-    }
-
-
-    // Add only genuinely new final speech.
-    if (newFinal.trim()) {
-        finalTranscriptAccumulator +=
-    formatSpokenText(newFinal.trim()) + ' ';
-
-        transcriptEditor.value =
-            finalTranscriptAccumulator.trim();
-
-        updateCounts();
-
-        // Keep INPUT VOICE synchronized with
-        // the finalized OUTPUT speech.
-        syncParagraphOutput();
-
-        // Hide live speech popup in BOTH boxes
-        // when the speech becomes final.
-        interimBadge.classList.add('hidden');
-        inputInterimBadge.classList.add('hidden');
-    }
-
-
-    // Show the current unfinished speech
-    // while the user is still speaking.
-    if (interim) {
-        // OUTPUT live/interim speech
-        interimText.textContent = interim;
-        interimBadge.classList.remove('hidden');
-
-        // INPUT VOICE live/interim speech
-        inputInterimText.textContent = interim;
-        inputInterimBadge.classList.remove('hidden');
-    }
-};
+                if (interim) {
+                    interimText.textContent = interim;
+                    interimBadge.classList.remove('hidden');
+                }
+            };
 
             recognition.onerror = (event) => {
                 console.error("Speech recognition error", event.error);
@@ -525,53 +547,29 @@ recognition.maxAlternatives = 3;
             };
 
             recognition.onend = () => {
-    isListening = false;
-    updateUIState(false);
-
-    // Hide live speech popup in BOTH boxes
-    interimBadge.classList.add('hidden');
-    inputInterimBadge.classList.add('hidden');
-};
+                isListening = false;
+                updateUIState(false);
+                interimBadge.classList.add('hidden');
+            };
         }
 
-        languageSelect.addEventListener('change', async () => {
+        
+
+languageSelect.addEventListener('change', async () => {
     const langName =
         languageSelect.options[languageSelect.selectedIndex].text;
 
-    showToast("Switching output language to " + langName + "...");
+    showToast("Switching OUTPUT language to " + langName + "...");
 
     const currentText = transcriptEditor.value.trim();
 
     if (currentText) {
-        await translateContentToLanguage(
-            languageSelect.value,
-            langName
-        );
+        await translateContentToLanguage(languageSelect.value, langName);
     }
 });
 
-        // Speech/Input language selector
-// This controls only the language used by
-// microphone speech recognition.
-speechLanguageSelect.addEventListener('change', () => {
-    const selectedLanguage =
-        speechLanguageSelect.options[
-            speechLanguageSelect.selectedIndex
-        ].text;
 
-    if (recognition) {
-        recognition.lang = speechLanguageSelect.value;
-    }
 
-    // If recognition is currently active, stop the
-    // current session so the new language is used
-    // when the next PTT session starts.
-    if (isListening) {
-        stopListening();
-    }
-
-    showToast("Speech language changed to " + selectedLanguage);
-});
 
         async function translateContentToLanguage(langCode, langName) {
             let text = transcriptEditor.value.trim();
@@ -616,7 +614,7 @@ speechLanguageSelect.addEventListener('change', () => {
                 } else {
                     text = text + ` (${langName})`;
                 }
-
+                
                 transcriptEditor.value = text;
                 finalTranscriptAccumulator = text;
                 updateCounts();
@@ -694,28 +692,19 @@ speechLanguageSelect.addEventListener('change', () => {
         }
 
         async function startListening() {
-    if (!recognition || isListening) return;
+            if (!recognition || isListening) return;
+            
+            // Ensure permission is secured once to prevent browser permission prompts on every click
+            const allowed = await ensureMicPermission();
+            if (!allowed) return;
 
-    // Ensure permission is secured once to prevent browser permission prompts on every click
-    const allowed = await ensureMicPermission();
-    if (!allowed) return;
-
-    try {
-        // Always use the language currently selected
-        // in the Speech/Input language selector.
-        recognition.lang = speechLanguageSelect.value;
-
-        finalTranscriptAccumulator =
-            transcriptEditor.value
-                ? transcriptEditor.value + ' '
-                : '';
-
-        recognition.start();
-
-    } catch (e) {
-        console.error(e);
-    }
-}
+            try {
+                finalTranscriptAccumulator = transcriptEditor.value ? transcriptEditor.value + ' ' : '';
+                recognition.start();
+            } catch (e) {
+                console.error(e);
+            }
+        }
 
         function stopListening() {
             if (!recognition || !isListening) return;
@@ -726,290 +715,87 @@ speechLanguageSelect.addEventListener('change', () => {
             }
         }
 
-
-        // PTT CONTROLS
-// Hold-to-Talk:
-//   - Press and hold = ON
-//   - Release = OFF
-//   - Quick click = does nothing
-//
-// Click Toggle:
-//   - First click = ON
-//   - Second click = OFF
-//
-// Pointer Events are used so mouse, touch and pen
-// follow one consistent event path.
-
-let pttPressActive = false;
-let startListeningInProgress = false;
-let pendingStopRequested = false;
-
-
-// Start listening safely
-async function startPttListening() {
-    if (startListeningInProgress) return;
-
-    startListeningInProgress = true;
-    pendingStopRequested = false;
-
-    try {
-        await startListening();
-    } finally {
-        startListeningInProgress = false;
-
-        // If the user released the Hold-to-Talk button
-        // while microphone startup was still waiting,
-        // immediately stop once startup completes.
-        if (pendingStopRequested) {
-            pendingStopRequested = false;
-
-            if (isListening) {
-                stopListening();
+        function setPttMode(toggleMode) {
+            isToggleMode = toggleMode;
+            if (isToggleMode) {
+                tabIndicator.style.transform = 'translateX(100%)';
+                tabToggle.classList.remove('text-slate-500', 'dark:text-slate-400');
+                tabToggle.classList.add('text-brand-600', 'dark:text-brand-400');
+                tabHold.classList.remove('text-brand-600', 'dark:text-brand-400');
+                tabHold.classList.add('text-slate-500', 'dark:text-slate-400');
+                
+                pttInstruction.textContent = "Click once to start recording, click again to stop";
+                pttButtonLabel.textContent = "CLICK TO START";
+                showToast("Switched to Click Toggle mode");
+            } else {
+                tabIndicator.style.transform = 'translateX(0%)';
+                tabHold.classList.remove('text-slate-500', 'dark:text-slate-400');
+                tabHold.classList.add('text-brand-600', 'dark:text-brand-400');
+                tabToggle.classList.remove('text-brand-600', 'dark:text-brand-400');
+                tabToggle.classList.add('text-slate-500', 'dark:text-slate-400');
+                
+                pttInstruction.textContent = "Press & hold spacebar or click button to speak";
+                pttButtonLabel.textContent = "HOLD TO TALK";
+                showToast("Switched to Hold-to-Talk mode");
             }
         }
-    }
-}
 
+        tabHold.addEventListener('click', () => setPttMode(false));
+        tabToggle.addEventListener('click', () => setPttMode(true));
 
-// Stop listening safely
-function stopPttListening() {
-    pendingStopRequested = true;
+        pttButton.addEventListener('mousedown', () => {
+            if (!isToggleMode) startListening();
+        });
+        window.addEventListener('mouseup', () => {
+            if (!isToggleMode && isListening) stopListening();
+        });
 
-    if (isListening) {
-        stopListening();
-    }
-}
+        pttButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!isToggleMode) startListening();
+        });
+        window.addEventListener('touchend', () => {
+            if (!isToggleMode && isListening) stopListening();
+        });
 
+        pttButton.addEventListener('click', () => {
+            if (isToggleMode) {
+                if (isListening) {
+                    stopListening();
+                } else {
+                    startListening();
+                }
+            }
+        });
 
-// Start Hold-to-Talk
-function handlePttStart() {
-    if (isToggleMode) return;
-    if (pttPressActive) return;
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && document.activeElement !== transcriptEditor && !isToggleMode && !isListening) {
+                e.preventDefault();
+                startListening();
+            }
+        });
 
-    pttPressActive = true;
-    pendingStopRequested = false;
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && document.activeElement !== transcriptEditor && !isToggleMode && isListening) {
+                e.preventDefault();
+                stopListening();
+            }
+        });
 
-    if (!isListening && !startListeningInProgress) {
-        startPttListening();
-    }
-}
-
-
-// Stop Hold-to-Talk
-function handlePttStop() {
-    if (isToggleMode) return;
-    if (!pttPressActive) return;
-
-    pttPressActive = false;
-
-    // If startup is still in progress, remember that
-    // the user already released the button.
-    if (startListeningInProgress) {
-        pendingStopRequested = true;
-        return;
-    }
-
-    if (isListening) {
-        stopListening();
-    }
-}
-
-
-// Pointer down = Hold-to-Talk START
-pttButton.addEventListener('pointerdown', (e) => {
-    if (isToggleMode) return;
-
-    e.preventDefault();
-
-    // Keep receiving pointer events even if the pointer
-    // moves outside the button.
-    try {
-        pttButton.setPointerCapture(e.pointerId);
-    } catch (err) {
-        // Pointer capture may not be available.
-    }
-
-    handlePttStart();
-});
-
-
-// Pointer up = Hold-to-Talk STOP
-pttButton.addEventListener('pointerup', (e) => {
-    if (isToggleMode) return;
-
-    e.preventDefault();
-    handlePttStop();
-});
-
-
-// Pointer cancelled = Hold-to-Talk STOP
-pttButton.addEventListener('pointercancel', (e) => {
-    if (isToggleMode) return;
-
-    e.preventDefault();
-    handlePttStop();
-});
-
-
-// If pointer capture is lost while holding,
-// stop only when the button is no longer being pressed.
-pttButton.addEventListener('lostpointercapture', () => {
-    if (isToggleMode) return;
-
-    if (!pttPressActive || !pttButton.matches(':active')) {
-        handlePttStop();
-    }
-});
-
-
-// CLICK TOGGLE
-// Click itself is ONLY used for Toggle mode.
-// Hold-to-Talk ignores click completely.
-pttButton.addEventListener('click', (e) => {
-    if (!isToggleMode) return;
-
-    e.preventDefault();
-
-    // If microphone is already ON, stop immediately.
-    if (isListening) {
-        pendingStopRequested = false;
-        stopListening();
-        return;
-    }
-
-    // If microphone startup is already happening,
-    // do not start another request.
-    if (startListeningInProgress) {
-        return;
-    }
-
-    // Start immediately.
-    startPttListening();
-});
-
-
-// SPACEBAR SUPPORT FOR HOLD-TO-TALK
-window.addEventListener('keydown', (e) => {
-    if (
-        e.code === 'Space' &&
-        document.activeElement !== transcriptEditor &&
-        !isToggleMode &&
-        !e.repeat &&
-        !pttPressActive
-    ) {
-        e.preventDefault();
-        handlePttStart();
-    }
-});
-
-
-window.addEventListener('keyup', (e) => {
-    if (
-        e.code === 'Space' &&
-        document.activeElement !== transcriptEditor &&
-        !isToggleMode
-    ) {
-        e.preventDefault();
-        handlePttStop();
-    }
-});
-
-
-// If the page loses focus while holding PTT,
-// make sure recording does not remain stuck.
-window.addEventListener('blur', () => {
-    if (!isToggleMode && pttPressActive) {
-        handlePttStop();
-    }
-});
-
-
-// PTT MODE SWITCHING
-// The selected mode takes effect immediately.
-// If the microphone is already ON, keep it running
-// while changing how the button controls it.
-function setPttMode(toggleMode) {
-    isToggleMode = toggleMode;
-
-    if (isToggleMode) {
-        tabIndicator.style.transform = 'translateX(100%)';
-
-        tabToggle.classList.remove(
-            'text-slate-500',
-            'dark:text-slate-400'
-        );
-        tabToggle.classList.add(
-            'text-brand-600',
-            'dark:text-brand-400'
-        );
-
-        tabHold.classList.remove(
-            'text-brand-600',
-            'dark:text-brand-400'
-        );
-        tabHold.classList.add(
-            'text-slate-500',
-            'dark:text-slate-400'
-        );
-
-        pttInstruction.textContent =
-            "Click once to start recording, click again to stop";
-
-        pttButtonLabel.textContent = "CLICK TO START";
-
-        // A previous Hold-to-Talk press must no longer
-        // control the button after switching modes.
-        pttPressActive = false;
-        pendingStopRequested = false;
-
-        showToast("Switched to Click Toggle mode");
-
-    } else {
-        tabIndicator.style.transform = 'translateX(0%)';
-
-        tabHold.classList.remove(
-            'text-slate-500',
-            'dark:text-slate-400'
-        );
-        tabHold.classList.add(
-            'text-brand-600',
-            'dark:text-brand-400'
-        );
-
-        tabToggle.classList.remove(
-            'text-brand-600',
-            'dark:text-brand-400'
-        );
-        tabToggle.classList.add(
-            'text-slate-500',
-            'dark:text-slate-400'
-        );
-
-        pttInstruction.textContent =
-            "Press & hold spacebar or click button to speak";
-
-        pttButtonLabel.textContent = "HOLD TO TALK";
-
-        // A previous Toggle action must no longer
-        // affect Hold-to-Talk state.
-        pttPressActive = false;
-        pendingStopRequested = false;
-
-        showToast("Switched to Hold-to-Talk mode");
-    }
-}
-
-
-tabHold.addEventListener('click', () => {
-    setPttMode(false);
-});
-
-tabToggle.addEventListener('click', () => {
-    setPttMode(true);
-});
-
-
-        
+        const modeButtons = formatModeGroup.querySelectorAll('.mode-btn');
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modeButtons.forEach(b => {
+                    b.classList.remove('border-brand-600', 'bg-brand-50/50', 'dark:bg-brand-950/30', 'text-brand-700', 'dark:text-brand-300');
+                    b.classList.add('border-slate-200', 'dark:border-slate-700', 'bg-transparent', 'text-slate-700', 'dark:text-slate-300');
+                });
+                btn.classList.add('border-brand-600', 'bg-brand-50/50', 'dark:bg-brand-950/30', 'text-brand-700', 'dark:text-brand-300');
+                btn.classList.remove('border-slate-200', 'dark:border-slate-700', 'bg-transparent', 'text-slate-700', 'dark:text-slate-300');
+                
+                currentFormattingMode = btn.getAttribute('data-mode');
+                showToast("Mode changed to " + btn.querySelector('span').textContent);
+            });
+        });
 
         function updateCounts() {
     const text = transcriptEditor.value.trim();
@@ -1019,44 +805,25 @@ tabToggle.addEventListener('click', () => {
     charCountEl.textContent = `${chars} char${chars === 1 ? '' : 's'}`;
 }
 
-// Keep INPUT VOICE and OUTPUT synchronized
-//
-// This helper is used whenever the application
-// changes INPUT VOICE programmatically.
-function setParagraphOutput(value) {
-    paragraphOutput.value = value;
-    transcriptEditor.value = value;
-    finalTranscriptAccumulator = value;
-    updateCounts();
-}
 
-
-// Keep the existing function name because
-// other parts of the application already call it.
+// Keep INPUT and OUTPUT synchronized in both directions
 function syncParagraphOutput() {
     paragraphOutput.value = transcriptEditor.value;
 }
 
-
-// OUTPUT → INPUT VOICE
-// When the user types or edits OUTPUT,
-// INPUT VOICE follows immediately.
+// OUTPUT edited → update INPUT VOICE
 transcriptEditor.addEventListener('input', () => {
     finalTranscriptAccumulator = transcriptEditor.value;
     updateCounts();
     syncParagraphOutput();
 });
 
-
-// INPUT VOICE → OUTPUT
-// When the user types or edits INPUT VOICE,
-// OUTPUT follows immediately.
+// INPUT VOICE edited → update OUTPUT
 paragraphOutput.addEventListener('input', () => {
     transcriptEditor.value = paragraphOutput.value;
     finalTranscriptAccumulator = paragraphOutput.value;
     updateCounts();
 });
-
         tellBtn.addEventListener('click', () => {
     const text = transcriptEditor.value.trim();
 
@@ -1072,9 +839,9 @@ paragraphOutput.addEventListener('input', () => {
 
     const synth = window.speechSynthesis;
 
-    // Only cancel if speech is already active.
-    // Some mobile browsers can fail the first speech request
-    // when cancel() is called unnecessarily.
+    // If speech is already playing, stop it before starting the new text.
+    // Do NOT call cancel() when nothing is speaking because some mobile
+    // browsers can treat the first cancel() as an interrupted speech request.
     if (synth.speaking || synth.pending) {
         synth.cancel();
     }
@@ -1082,8 +849,8 @@ paragraphOutput.addEventListener('input', () => {
     const utterance = new SpeechSynthesisUtterance(text);
 
     utterance.lang = languageSelect.value;
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.rate = Number(speechSpeed.value);
+    
 
     // Wake up the speech engine on mobile browsers.
     try {
@@ -1113,8 +880,8 @@ paragraphOutput.addEventListener('input', () => {
         showToast("Error reading text.");
     };
 
-    // Keep speak() directly inside the button click.
-    // This helps mobile browsers recognize it as user-initiated speech.
+    // speak() is called directly from the button click so mobile
+    // browsers still recognize it as a user-initiated speech request.
     synth.speak(utterance);
 });
 
@@ -1208,7 +975,7 @@ paragraphOutput.addEventListener('input', () => {
             const newNote = {
     id: Date.now(),
     date: new Date().toLocaleString(),
-    mode: "plain",
+    mode: currentFormattingMode,
     language: languageSelect.options[languageSelect.selectedIndex].text,
     fullText: text,
 
@@ -1227,7 +994,7 @@ if (window.syncNoteToCloud) {
 
 updateSavedNotesBadge();
 showToast("Note saved successfully!");
-
+            
             renderHistoryList();
             historyModal.classList.remove('hidden');
         }
@@ -1252,7 +1019,7 @@ showToast("Note saved successfully!");
                 historyListContainer.innerHTML = `<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-bookmark text-3xl mb-2 opacity-50"></i><p class="text-sm">No saved notes yet. Click "Save Note" to store dictations here.</p></div>`;
                 return;
             }
-
+            
             historyListContainer.innerHTML = history.map(item => `
                 <div class="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-800/50 hover:border-brand-500/50 transition flex flex-col space-y-3">
                     <div class="flex items-center justify-between text-xs text-slate-400">
@@ -1263,7 +1030,7 @@ showToast("Note saved successfully!");
                         </div>
                     </div>
                     <p class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">${item.fullText}</p>
-
+                    
                     <!-- Action & Sharing Bar -->
                     <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
                         <div class="flex items-center space-x-2">
@@ -1276,7 +1043,7 @@ showToast("Note saved successfully!");
                                 <span>Delete</span>
                             </button>
                         </div>
-
+                        
                         <!-- Sharing Options -->
                         <div class="flex items-center space-x-1.5">
                             <span class="text-[11px] text-slate-400 mr-1"><i class="fa-solid fa-share-nodes"></i> Share:</span>
@@ -1297,7 +1064,7 @@ showToast("Note saved successfully!");
                 </div>
             `).join('');
         }
-
+                
                 window.loadHistoryItem = function(id) {
     const history = getSavedHistory();
     const item = history.find(h => h.id === id);
@@ -1312,32 +1079,14 @@ showToast("Note saved successfully!");
         showToast("Note loaded into editor!");
     }
 };
-        window.deleteHistoryItem = async function(id) {
-    // Remove the note from the local history immediately.
-    let history = getSavedHistory();
 
-    history = history.filter(h => h.id !== id);
-
-    localStorage.setItem(
-        'voice_to_para_notes',
-        JSON.stringify(history)
-    );
-
-    updateSavedNotesBadge();
-    renderHistoryList();
-
-    // Also delete the same note from Firebase.
-    if (window.deleteNoteFromCloud) {
-        const cloudDeleted = await window.deleteNoteFromCloud(id);
-
-        if (!cloudDeleted) {
-            showToast("Note removed locally, but cloud delete failed.");
-            return;
-        }
-    }
-
-    showToast("Note deleted.");
-};
+        window.deleteHistoryItem = function(id) {
+            let history = getSavedHistory();
+            history = history.filter(h => h.id !== id);
+            localStorage.setItem('voice_to_para_notes', JSON.stringify(history));
+            renderHistoryList();
+            showToast("Note deleted.");
+        };
 
         window.shareViaWebAPI = function(id) {
             const history = getSavedHistory();
@@ -1408,12 +1157,11 @@ showToast("Note saved successfully!");
 <script type="module">
   import { auth, db, onAuthStateChanged } from "./firebase-config.js";
 
-import {
+  import {
     collection,
     doc,
     setDoc,
-    getDocs,
-    deleteDoc
+    getDocs
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
   let currentUser = null;
@@ -1626,36 +1374,6 @@ console.log("✅ Firestore write completed:", note.id);
   // This function will be called by the existing Save Note system.
   window.syncNoteToCloud = function(note) {
     return uploadNoteToFirebase(note);
-};
-
-// Delete a note from Firebase Firestore
-window.deleteNoteFromCloud = async function(noteId) {
-    if (!currentUser) {
-        console.log("Firebase delete waiting for login.");
-        return false;
-    }
-
-    if (!navigator.onLine) {
-        console.log("Offline. Cloud note was not deleted.");
-        return false;
-    }
-
-    try {
-        const noteRef = doc(
-            collection(db, "users", currentUser.uid, "notes"),
-            String(noteId)
-        );
-
-        await deleteDoc(noteRef);
-
-        console.log("🗑️ Firebase note deleted:", noteId);
-
-        return true;
-
-    } catch (error) {
-        console.error("❌ Firebase note delete failed:", error);
-        return false;
-    }
 };
 
 window.addEventListener("online", async () => {
